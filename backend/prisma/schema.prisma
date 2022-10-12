@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                       String      @id @default(uuid())
+  createdAt                DateTime    @default(now())
+  updatedAt                DateTime    @updatedAt
+  email                    String      @unique
+  emailVerified            Boolean?    @default(false)
+  firstName                String?     @default("Anonymous") @db.VarChar(255)
+  lastName                 String?     @default("Anonymous") @db.VarChar(255)
+  password                 String
+  role                     Role        @default(USER)
+  bloodGroup               bloodGroup?
+  passwordResetToken       String?     @db.VarChar(255)
+  passwordResetExpires     DateTime?
+  emailVerificationToken   String?     @db.VarChar(255)
+  emailVerificationExpires DateTime?
+  photos                   photos[]
+  avatar                   String?
+}
+
+model photos {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  url       String
+  public_id String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+}
+
+enum Role {
+  USER
+  MEMBER
+  ADVISOR
+  EDITOR
+  EXECUTIVE
+  ADMIN
+}
+
+enum bloodGroup {
+  A_Positive  @map("A+")
+  B_Positive  @map("B+")
+  O_Positive  @map("O+")
+  AB_Positive @map("AB+")
+  A_Negative  @map("A-")
+  B_Negative  @map("B-")
+  O_Negative  @map("O-")
+  AB_Negative @map("AB-")
+}

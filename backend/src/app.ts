@@ -1,6 +1,10 @@
+import cookieParser from 'cookie-parser';
 import express, { Application } from 'express';
 import { Server } from 'http';
 import morgan from 'morgan';
+import globalErrorHandler from './middleware/globalErrorHandler';
+import notFound from './middleware/notFound';
+import router from './router';
 
 class App {
     public express: Application;
@@ -9,12 +13,22 @@ class App {
         this.port = port;
         this.express = express();
         this.initializeMiddleWare();
+        this.useRouter();
+        this.express.all('*', notFound);
+        this.express.use(globalErrorHandler);
     }
 
     private initializeMiddleWare(): void {
         this.express.use(morgan('dev'));
         this.express.use(express.json());
+        this.express.use(cookieParser());
         this.express.use(express.urlencoded({ extended: false }));
+    }
+
+    // use router
+    private async useRouter() {
+        this.express.use('/api', router);
+        this.express.use('/media/image', express.static('upload'));
     }
 
     public listen(): Server {
