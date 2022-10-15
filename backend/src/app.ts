@@ -4,7 +4,6 @@ import { Server } from 'http';
 import morgan from 'morgan';
 import globalErrorHandler from './middleware/globalErrorHandler';
 import notFound from './middleware/notFound';
-import router from './router';
 
 class App {
     public express: Application;
@@ -27,7 +26,7 @@ class App {
 
     // use router
     private async useRouter() {
-        this.express.use('/api', router);
+        this.express.use('/api', require('./router').default);
         this.express.use('/media/image', express.static('upload'));
     }
 

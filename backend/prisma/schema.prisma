@@ -19,14 +19,18 @@ model User {
   firstName                String?     @default("Anonymous") @db.VarChar(255)
   lastName                 String?     @default("Anonymous") @db.VarChar(255)
   password                 String
+  avatar                   String?
   role                     Role        @default(USER)
   bloodGroup               bloodGroup?
+  lastDonation             DateTime?
   passwordResetToken       String?     @db.VarChar(255)
   passwordResetExpires     DateTime?
   emailVerificationToken   String?     @db.VarChar(255)
   emailVerificationExpires DateTime?
   photos                   photos[]
-  avatar                   String?
+  degree                   degree[]
+  address                  address[]
+  contact                  contact[]
 }
 
 model photos {
@@ -37,6 +41,65 @@ model photos {
   public_id String
   user      User     @relation(fields: [userId], references: [id])
   userId    String
+}
+
+model degree {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  degree      String
+  institute   String
+  passingYear DateTime
+  GPA         Float
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      String?
+
+  @@index([userId, degree], map: "Degree_userId_degree_key")
+}
+
+model address {
+  id        String      @id @default(uuid())
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  country   String      @default("Bangladesh") @db.VarChar(255)
+  division  String?     @db.VarChar(255)
+  district  String?     @db.VarChar(255)
+  upazila   String?     @db.VarChar(255)
+  tana      String?     @db.VarChar(255)
+  union     String?     @db.VarChar(255)
+  village   String?     @db.VarChar(255)
+  state     String?     @db.VarChar(255)
+  city      String?     @db.VarChar(255)
+  street    String?     @db.VarChar(255)
+  zip       String?     @db.VarChar(255)
+  type      AddressType @default(PRESENT)
+  user      User?       @relation(fields: [userId], references: [id])
+  userId    String?
+}
+
+model contact {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  phone     String?  @db.VarChar(255)
+  whatsapp  String?  @db.VarChar(255)
+  email     String?  @db.VarChar(255)
+  imo       String?  @db.VarChar(255)
+  viber     String?  @db.VarChar(255)
+  facebook  String?  @db.VarChar(255)
+  twitter   String?  @db.VarChar(255)
+  linkedin  String?  @db.VarChar(255)
+  skype     String?  @db.VarChar(255)
+  website   String?  @db.VarChar(255)
+  page      String?  @db.VarChar(255)
+  github    String?  @db.VarChar(255)
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+}
+
+enum AddressType {
+  PRESENT
+  PERMANENT
 }
 
 enum Role {

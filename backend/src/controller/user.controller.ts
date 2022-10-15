@@ -21,6 +21,9 @@ export const getMe = catchAsync(async (req: Request, res: Response) => {
             email: true,
             role: true,
             avatar: true,
+            lastDonation: true,
+            address: true,
+            degree: true,
         },
     });
 
@@ -34,7 +37,13 @@ export const getMe = catchAsync(async (req: Request, res: Response) => {
 
 // update me
 export const updateMe = catchAsync(async (req: Request, res: Response) => {
-    const { firstName, lastName, bloodGroup, avatar: photo } = req.body;
+    const {
+        firstName,
+        lastName,
+        bloodGroup,
+        lastDonation,
+        avatar: photo,
+    } = req.body;
     const avatar = req.file?.filename;
 
     if (avatar) {
@@ -83,6 +92,7 @@ export const updateMe = catchAsync(async (req: Request, res: Response) => {
                 firstName,
                 lastName,
                 bloodGroup,
+                lastDonation: new Date(lastDonation),
                 avatar: photo,
             },
             select: {
