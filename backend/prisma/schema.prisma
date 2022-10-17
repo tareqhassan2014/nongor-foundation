@@ -19,7 +19,7 @@ model User {
   firstName                String?     @default("Anonymous") @db.VarChar(255)
   lastName                 String?     @default("Anonymous") @db.VarChar(255)
   password                 String
-  avatar                   String?
+  avatar                   String?     @default("default-avatar.png") @db.VarChar(255)
   role                     Role        @default(USER)
   bloodGroup               bloodGroup?
   lastDonation             DateTime?

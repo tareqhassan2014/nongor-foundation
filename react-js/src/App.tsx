@@ -1,10 +1,13 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import ForgetPassword from './components/forgetPassword/ForgetPassword';
 import Home from './components/Home/Home';
 import FirstLayout from './components/Layouts/FirstLayout/FirstLayout';
 import Login from './components/Login/Login';
 import NotFound from './components/NotFound/NotFound';
 import Profile from './components/Profile/Profile';
 import SignUp from './components/SignUp/SignUp';
+import { useGetMeQuery } from './features/auth/authAPI';
+import PrivateRoute from './router/PrivateRoute';
 
 const router = createBrowserRouter([
     {
@@ -17,10 +20,7 @@ const router = createBrowserRouter([
             },
         ],
     },
-    {
-        path: 'profile',
-        element: <Profile />,
-    },
+
     {
         path: 'login',
         element: <Login />,
@@ -30,12 +30,25 @@ const router = createBrowserRouter([
         element: <SignUp />,
     },
     {
+        path: 'forgot-password',
+        element: <ForgetPassword />,
+    },
+    {
         path: '*',
         element: <NotFound />,
+    },
+    {
+        path: 'profile',
+        element: (
+            <PrivateRoute>
+                <Profile />
+            </PrivateRoute>
+        ),
     },
 ]);
 
 function App() {
+    useGetMeQuery();
     return <RouterProvider router={router} />;
 }
 

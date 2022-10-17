@@ -3,10 +3,8 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import {
     Avatar,
     Box,
-    Checkbox,
     Container,
     CssBaseline,
-    FormControlLabel,
     Grid,
     TextField,
     Typography,
@@ -15,27 +13,22 @@ import { useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { Link as DomLink } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useLoginMutation } from '../../features/auth/authAPI';
+import { useForgetPasswordMutation } from '../../features/auth/authAPI';
 
-type Inputs = {
-    email: string;
-    password: string;
-};
-
-export default function Login() {
+export default function ForgetPassword() {
     const [show, setShow] = useState(false);
-    const [signIn, { isLoading }] = useLoginMutation();
+    const [forgetPassword, { isLoading }] = useForgetPasswordMutation();
 
     const {
         register,
         handleSubmit,
         formState: { errors },
         reset,
-    } = useForm<Inputs>();
+    } = useForm<ForgetPassword>();
 
-    const onSubmit: SubmitHandler<Inputs> = async ({ email, password }) => {
+    const onSubmit: SubmitHandler<ForgetPassword> = async ({ email }) => {
         try {
-            await signIn({ email, password });
+            await forgetPassword({ email });
 
             reset();
         } catch (error: any) {
@@ -85,29 +78,7 @@ export default function Login() {
                             required: 'Email is required',
                         })}
                     />
-                    <TextField
-                        required
-                        fullWidth
-                        margin="normal"
-                        autoComplete="current-password"
-                        error={Boolean(errors.password)}
-                        type={show ? 'text' : 'password'}
-                        label={errors.password ? 'Error' : 'Password'}
-                        helperText={errors.password?.message}
-                        {...register('password', {
-                            required: 'password is required',
-                        })}
-                    />
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                value="remember"
-                                onClick={() => setShow(!show)}
-                                color="primary"
-                            />
-                        }
-                        label="Show password"
-                    />
+
                     <LoadingButton
                         type="submit"
                         fullWidth

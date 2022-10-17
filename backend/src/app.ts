@@ -1,4 +1,5 @@
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import express, { Application } from 'express';
 import { Server } from 'http';
 import morgan from 'morgan';
@@ -21,6 +22,7 @@ class App {
         this.express.use(morgan('dev'));
         this.express.use(express.json());
         this.express.use(cookieParser());
+        this.express.use(cors());
         this.express.use(express.urlencoded({ extended: false }));
     }
 

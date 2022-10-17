@@ -12,11 +12,14 @@ import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
+import { Link } from 'react-router-dom';
+import useAuth from '../../../hooks/useAuth';
 
-const pages = ['Products', 'Pricing', 'Blog'];
+const pages = ['Products', 'Profile', 'Blog', 'SignUp', 'Login'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 const FirstHeader = () => {
+    const user = useAuth();
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
         null
     );
@@ -102,6 +105,8 @@ const FirstHeader = () => {
                                 <MenuItem
                                     key={page}
                                     onClick={handleCloseNavMenu}
+                                    component={Link}
+                                    to={`/${page.toLowerCase()}`}
                                 >
                                     <Typography textAlign="center">
                                         {page}
@@ -142,6 +147,8 @@ const FirstHeader = () => {
                                 key={page}
                                 onClick={handleCloseNavMenu}
                                 sx={{ my: 2, color: 'white', display: 'block' }}
+                                component={Link}
+                                to={`/${page.toLowerCase()}`}
                             >
                                 {page}
                             </Button>
@@ -149,17 +156,27 @@ const FirstHeader = () => {
                     </Box>
 
                     <Box sx={{ flexGrow: 0 }}>
-                        <Tooltip title="Open settings">
-                            <IconButton
-                                onClick={handleOpenUserMenu}
-                                sx={{ p: 0 }}
+                        {user.id ? (
+                            <Tooltip title="Open settings">
+                                <IconButton
+                                    onClick={handleOpenUserMenu}
+                                    sx={{ p: 0 }}
+                                >
+                                    <Avatar
+                                        alt="Remy Sharp"
+                                        src="/static/images/avatar/2.jpg"
+                                    />
+                                </IconButton>
+                            </Tooltip>
+                        ) : (
+                            <Button
+                                variant="contained"
+                                component={Link}
+                                to="/login"
                             >
-                                <Avatar
-                                    alt="Remy Sharp"
-                                    src="/static/images/avatar/2.jpg"
-                                />
-                            </IconButton>
-                        </Tooltip>
+                                Login
+                            </Button>
+                        )}
                         <Menu
                             sx={{ mt: '45px' }}
                             id="menu-appbar"
@@ -180,6 +197,8 @@ const FirstHeader = () => {
                                 <MenuItem
                                     key={setting}
                                     onClick={handleCloseUserMenu}
+                                    component={Link}
+                                    to={`/${setting.toLowerCase()}`}
                                 >
                                     <Typography textAlign="center">
                                         {setting}

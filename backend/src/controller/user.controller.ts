@@ -24,6 +24,7 @@ export const getMe = catchAsync(async (req: Request, res: Response) => {
             lastDonation: true,
             address: true,
             degree: true,
+            contact: true,
         },
     });
 
