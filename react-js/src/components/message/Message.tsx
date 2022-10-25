@@ -2,16 +2,26 @@ import Alert from '@mui/material/Alert';
 import Slide from '@mui/material/Slide';
 import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
-import React from 'react';
-import { clearMessage } from '../../features/message/messageSlice';
-import { useAppDispatch } from '../../hooks/hooks';
-import useMessage from '../../hooks/useMessage';
+import { clearMessage } from 'features/message/messageSlice';
+import { useAppDispatch } from 'hooks/hooks';
+import useMessage from 'hooks/useMessage';
+import React, { useEffect } from 'react';
 
 const Message = () => {
     const theme = useTheme();
     const message = useMessage();
     const dispatch = useAppDispatch();
     const containerRef = React.useRef(null);
+
+    useEffect(() => {
+        const unmount = () => {
+            setTimeout(() => {
+                dispatch(clearMessage());
+            }, 5000);
+        };
+
+        return unmount;
+    }, [dispatch, message]);
 
     return (
         <Stack

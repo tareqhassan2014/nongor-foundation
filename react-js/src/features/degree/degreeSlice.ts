@@ -44,10 +44,15 @@ export const degreeSlice = createSlice({
                 state.degree.splice(index, 1);
             }
         },
+
+        removeDegree: (state) => {
+            state.degree = [];
+        },
     },
 });
 
-export const { setDegree, updateDegree, deleteDegree } = degreeSlice.actions;
+export const { setDegree, updateDegree, deleteDegree, removeDegree } =
+    degreeSlice.actions;
 
 export default degreeSlice.reducer;
 export const selectCurrentDegree = (state: RootState) => state.degree;

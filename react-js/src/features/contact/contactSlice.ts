@@ -57,10 +57,26 @@ export const contactSlice = createSlice({
             state.page = contact.page;
             state.github = contact.github;
         },
+
+        removeContact: (state) => {
+            state.id = '';
+            state.phone = '';
+            state.whatsapp = '';
+            state.email = '';
+            state.imo = '';
+            state.viber = '';
+            state.facebook = '';
+            state.twitter = '';
+            state.linkedin = '';
+            state.skype = '';
+            state.website = '';
+            state.page = '';
+            state.github = '';
+        },
     },
 });
 
-export const { setContact } = contactSlice.actions;
+export const { setContact, removeContact } = contactSlice.actions;
 
 export default contactSlice.reducer;
 

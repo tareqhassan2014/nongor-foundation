@@ -13,13 +13,15 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
+import { useLogoutMutation } from '../../../features/auth/authAPI';
 import useAuth from '../../../hooks/useAuth';
 
 const pages = ['Products', 'Profile', 'Blog', 'SignUp', 'Login'];
-const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+const settings = ['Profile', 'Account', 'Dashboard'];
 
 const FirstHeader = () => {
     const user = useAuth();
+    const [logout] = useLogoutMutation();
     const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
         null
     );
@@ -40,6 +42,11 @@ const FirstHeader = () => {
 
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
+    };
+
+    const handelLogout = async () => {
+        await logout();
+        handleCloseUserMenu();
     };
 
     return (
@@ -205,6 +212,12 @@ const FirstHeader = () => {
                                     </Typography>
                                 </MenuItem>
                             ))}
+
+                            <MenuItem onClick={handelLogout}>
+                                <Typography textAlign="center">
+                                    Logout
+                                </Typography>
+                            </MenuItem>
                         </Menu>
                     </Box>
                 </Toolbar>

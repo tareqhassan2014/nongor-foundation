@@ -1,8 +1,15 @@
+import UseOneTapGoogleLogin from './UseOneTapGoogleLogin';
+
 const Home = () => {
+    UseOneTapGoogleLogin();
+
     return (
-        <div>
-            <h1>Home</h1>
-        </div>
+        <>
+            {/* <FacebookMessenger /> */}
+            <div>
+                <h1>Home</h1>
+            </div>
+        </>
     );
 };
 

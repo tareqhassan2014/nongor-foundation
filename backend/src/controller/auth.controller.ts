@@ -2,11 +2,16 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { Request, Response } from 'express';
+import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import sendEmail from '../lib/sendEmail';
 import AppError from '../util/AppError';
 import catchAsync from '../util/catchAsync';
+import cookieOptions from '../util/cookieOptions';
+import { Token } from '../util/jwt';
 import sendResponse from '../util/sendResponse';
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const prisma = new PrismaClient({
     log: ['query', 'info', 'warn'],
@@ -484,3 +489,81 @@ export const verifyEmail = catchAsync(async (req: Request, res: Response) => {
         name: 'user',
     });
 });
+
+// google One Tap Login
+export const googleOneTapLogin = catchAsync(
+    async (req: Request, res: Response) => {
+        const { idToken } = req.body;
+
+        // check if idToken exists
+        if (!idToken) {
+            throw new AppError('Please provide idToken', 400);
+        }
+
+        // verify the idToken
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+
+        if (!payload) {
+            throw new AppError('Google One Tap Login failed', 401);
+        }
+
+        const email = payload.email as string;
+        const avatar = payload.picture as string;
+        const firstName = payload.given_name as string;
+        const lastName = payload.family_name as string;
+
+        // find the user
+        const user = await prisma.user.findUnique({
+            where: {
+                email: payload.email,
+            },
+        });
+
+        // if user exists, send token
+        if (user) {
+            // create token
+            const token = Token.sign({ id: user.id });
+
+            // send cookie
+            res.cookie('jwt', token, cookieOptions);
+
+            // send response
+            sendResponse(200, 'Logged in successfully', res, {
+                data: user,
+                name: 'user',
+            });
+        } else {
+            // create a new user
+            const newUser = await prisma.user.create({
+                data: {
+                    email,
+                    avatar,
+                    firstName,
+                    lastName,
+                    emailVerified: true,
+                    password: await bcrypt.hash(
+                        crypto.randomBytes(32).toString('hex'),
+                        12
+                    ),
+                },
+            });
+
+            // create token for the user
+            const token = Token.sign({ id: newUser.id });
+
+            // ste token on cookie
+            res.cookie('jwt', token, cookieOptions);
+
+            // send response
+            sendResponse(200, 'Login successful', res, {
+                data: newUser,
+                name: 'user',
+            });
+        }
+    }
+);

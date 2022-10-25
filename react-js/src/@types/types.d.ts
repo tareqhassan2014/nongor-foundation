@@ -90,3 +90,7 @@ interface GetMeResponse {
         degree: Degree[];
     };
 }
+
+interface IdToken {
+    idToken: string;
+}

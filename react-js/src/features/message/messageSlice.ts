@@ -26,7 +26,6 @@ export const messageSlice = createSlice({
         // clear the message from the state
         clearMessage: (state) => {
             state.message = null;
-            state.type = null;
         },
     },
 });

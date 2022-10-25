@@ -3,6 +3,7 @@ import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import { styled } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
+import { useGetMeQuery } from '../../features/auth/authAPI';
 import useAuth from '../../hooks/useAuth';
 import useDegree from '../../hooks/useDegree';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
@@ -22,8 +23,12 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 const Profile = () => {
+    useGetMeQuery();
     const user = useAuth();
     const { degree } = useDegree();
+
+    // change title of the page
+    document.title = 'Profile | Nongor Foundation';
 
     return (
         <Container>

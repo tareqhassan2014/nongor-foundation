@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
     forgetPassword,
+    googleOneTapLogin,
     login,
     logout,
     register,
@@ -16,6 +17,7 @@ const router = Router();
 router.route('/register').post(register);
 router.route('/login').post(login);
 router.route('/logout').get(logout);
+router.route('/google-one-tap-login').post(googleOneTapLogin);
 
 router.route('/forgot-password').post(forgetPassword);
 router.route('/verify-email').post(sendVerificationEmail);

@@ -223,7 +223,7 @@ const ContactGrid = () => {
                                 setEdit({ ...edit, email: true })
                             }
                         >
-                            {contact?.email.substring(0, 30) + '...'}
+                            {contact?.email.substring(0, 20) + '...'}
                         </Typography>
                     )}
                 </Box>
@@ -264,7 +264,7 @@ const ContactGrid = () => {
                                 setEdit({ ...edit, facebook: true })
                             }
                         >
-                            {contact?.facebook.substring(0, 30) + '...'}
+                            {contact?.facebook.substring(0, 20) + '...'}
                         </Typography>
                     )}
                 </Box>
@@ -305,7 +305,7 @@ const ContactGrid = () => {
                                 setEdit({ ...edit, github: true })
                             }
                         >
-                            {contact?.github?.substring(0, 30) + '...'}
+                            {contact?.github?.substring(0, 20) + '...'}
                         </Typography>
                     )}
                 </Box>
@@ -346,7 +346,7 @@ const ContactGrid = () => {
                                 setEdit({ ...edit, website: true })
                             }
                         >
-                            {contact?.website?.substring(0, 30) + '...'}
+                            {contact?.website?.substring(0, 20) + '...'}
                         </Typography>
                     )}
                 </Box>

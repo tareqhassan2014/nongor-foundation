@@ -1,7 +1,7 @@
 import baseAPI from '../../app/baseAPI';
-import { setAddress } from '../address/addressSlice';
-import { setContact } from '../contact/contactSlice';
-import { setDegree } from '../degree/degreeSlice';
+import { removeAddress, setAddress } from '../address/addressSlice';
+import { removeContact, setContact } from '../contact/contactSlice';
+import { removeDegree, setDegree } from '../degree/degreeSlice';
 import { addMessage } from '../message/messageSlice';
 import { logout, setUser } from './authSlice';
 
@@ -17,8 +17,6 @@ export const authAPI = baseAPI.injectEndpoints({
             async onQueryStarted(query, { queryFulfilled, dispatch }) {
                 try {
                     const { data: user } = await queryFulfilled;
-                    // set token to local storage
-                    localStorage.setItem('token', user.token);
 
                     dispatch(setUser({ user }));
 
@@ -28,17 +26,6 @@ export const authAPI = baseAPI.injectEndpoints({
                             type: 'success',
                         })
                     );
-
-                    window.history.back();
-                    // back to previous
-                    setTimeout(() => {
-                        dispatch(
-                            addMessage({
-                                message: null,
-                                type: null,
-                            })
-                        );
-                    }, 5000);
                 } catch (error: any) {
                     dispatch(
                         addMessage({
@@ -49,16 +36,44 @@ export const authAPI = baseAPI.injectEndpoints({
                             type: 'error',
                         })
                     );
+                }
+            },
 
-                    // back to previous
-                    setTimeout(() => {
-                        dispatch(
-                            addMessage({
-                                message: null,
-                                type: null,
-                            })
-                        );
-                    }, 5000);
+            transformResponse(baseQueryReturnValue: AuthResponse, meta, arg) {
+                return baseQueryReturnValue.user;
+            },
+        }),
+
+        googleOneTapLogin: builder.mutation<User, IdToken>({
+            query: (credentials) => ({
+                url: '/api/auth/google-one-tap-login',
+                method: 'POST',
+                body: credentials,
+            }),
+
+            async onQueryStarted(query, { queryFulfilled, dispatch }) {
+                try {
+                    const { data: user } = await queryFulfilled;
+
+                    // dispatch(setUser({ user }));
+                    console.log(user);
+
+                    dispatch(
+                        addMessage({
+                            message: 'Login successful',
+                            type: 'success',
+                        })
+                    );
+                } catch (error: any) {
+                    dispatch(
+                        addMessage({
+                            message:
+                                error?.error?.data?.message ||
+                                error.message ||
+                                'Login failed',
+                            type: 'error',
+                        })
+                    );
                 }
             },
 
@@ -84,7 +99,7 @@ export const authAPI = baseAPI.injectEndpoints({
                     const user = res.data.user;
 
                     dispatch(setUser({ user }));
-                    dispatch(setContact({ contact }));
+                    contact && dispatch(setContact({ contact }));
 
                     if (address) {
                         address.forEach((address) => {
@@ -103,9 +118,14 @@ export const authAPI = baseAPI.injectEndpoints({
                         error.message ||
                         'Get user failed';
 
-                    if (message === 'jwt expired') {
-                        localStorage.removeItem('token');
+                    if (
+                        message === 'jwt expired' ||
+                        'You are not logged in! Please log in to get access'
+                    ) {
                         // window.location.reload();
+                        dispatch(removeAddress());
+                        dispatch(removeContact());
+                        dispatch(removeDegree());
                         dispatch(logout());
                     }
 
@@ -183,6 +203,26 @@ export const authAPI = baseAPI.injectEndpoints({
                 url: '/api/auth/logout',
                 method: 'GET',
             }),
+
+            async onQueryStarted(query, { queryFulfilled, dispatch }) {
+                try {
+                    await queryFulfilled;
+                    dispatch(removeAddress());
+                    dispatch(removeContact());
+                    dispatch(removeDegree());
+                    dispatch(logout());
+                } catch (error: any) {
+                    dispatch(
+                        addMessage({
+                            message:
+                                error?.error?.data?.message ||
+                                error.message ||
+                                'Logout failed',
+                            type: 'error',
+                        })
+                    );
+                }
+            },
         }),
 
         forgetPassword: builder.mutation<void, ForgetPassword>({
@@ -210,4 +250,6 @@ export const {
     useGetMeQuery,
     useSignUpMutation,
     useForgetPasswordMutation,
+    useLogoutMutation,
+    useGoogleOneTapLoginMutation,
 } = authAPI;

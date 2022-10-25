@@ -27,10 +27,15 @@ export const addressSlice = createSlice({
                 state.permanent = address;
             }
         },
+
+        removeAddress: (state) => {
+            state.present = null;
+            state.permanent = null;
+        },
     },
 });
 
-export const { setAddress } = addressSlice.actions;
+export const { setAddress, removeAddress } = addressSlice.actions;
 
 export default addressSlice.reducer;
 export const selectCurrentAddress = (state: RootState) => state.address;
