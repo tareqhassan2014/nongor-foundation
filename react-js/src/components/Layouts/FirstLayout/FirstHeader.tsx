@@ -45,8 +45,8 @@ const FirstHeader = () => {
     };
 
     const handelLogout = async () => {
-        await logout();
         handleCloseUserMenu();
+        await logout();
     };
 
     return (

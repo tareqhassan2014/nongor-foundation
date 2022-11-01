@@ -6,6 +6,8 @@
         "strict": true,
         "lib": ["esnext"],
         "esModuleInterop": true,
+        "baseUrl": "src",
+        "allowJs": true,
         "typeRoots": ["@types", "./node_modules/@types"]
     }
 }

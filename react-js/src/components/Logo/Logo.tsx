@@ -5,7 +5,6 @@ const Logo = () => {
     return (
         <>
             <img src={logo} alt="nongor foundation logo" width="35" />
-
             <Typography
                 variant="h4"
                 component="span"

@@ -14,13 +14,13 @@ const Message = () => {
     const containerRef = React.useRef(null);
 
     useEffect(() => {
-        const unmount = () => {
-            setTimeout(() => {
-                dispatch(clearMessage());
-            }, 5000);
-        };
+        const interval = setTimeout(() => {
+            console.log('This will run after 5 second!');
 
-        return unmount;
+            dispatch(clearMessage());
+        }, 5000);
+
+        return () => clearTimeout(interval);
     }, [dispatch, message]);
 
     return (

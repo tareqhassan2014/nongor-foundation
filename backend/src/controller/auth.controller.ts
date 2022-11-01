@@ -3,28 +3,26 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { Request, Response } from 'express';
 import { OAuth2Client } from 'google-auth-library';
-import jwt from 'jsonwebtoken';
 import sendEmail from '../lib/sendEmail';
 import AppError from '../util/AppError';
 import catchAsync from '../util/catchAsync';
-import cookieOptions from '../util/cookieOptions';
-import { Token } from '../util/jwt';
-import sendResponse from '../util/sendResponse';
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+import { Password } from '../util/Password';
+import { CustomResponse } from '../util/Response';
 
 const prisma = new PrismaClient({
     log: ['query', 'info', 'warn'],
 });
 
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 // register a new user
 export const register = catchAsync(async (req: Request, res: Response) => {
-    let { email, password, firstName, lastName, bloodGroup } = req.body;
+    let { email, password, firstName, lastName, bloodGroup, lastDonation } =
+        req.body;
 
     // check if email and password exists
-    if (!email || !password) {
+    if (!email || !password)
         throw new AppError('Please provide email and password', 400);
-    }
 
     // check if user already exists
     const userExist = await prisma.user.findUnique({
@@ -33,9 +31,7 @@ export const register = catchAsync(async (req: Request, res: Response) => {
         },
     });
 
-    if (userExist) {
-        throw new AppError('User already exists', 400);
-    }
+    if (userExist) throw new AppError('User already exists', 400);
 
     //hash the password
     password = await bcrypt.hash(password, 12);
@@ -43,53 +39,28 @@ export const register = catchAsync(async (req: Request, res: Response) => {
     // create a new user
     const user = await prisma.user.create({
         data: {
-            firstName,
-            lastName,
             email,
+            lastName,
             password,
+            firstName,
             bloodGroup,
+            lastDonation: lastDonation ? new Date(lastDonation) : null,
         },
         select: {
             id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
             role: true,
+            email: true,
             avatar: true,
+            lastName: true,
+            firstName: true,
         },
     });
 
-    // create token for the user
-    const token = jwt.sign(
-        //@ts-ignore
-        { id: user.id },
-        process.env.JWT_SECRET as string,
-        {
-            expiresIn: process.env.JWT_EXPIRES_IN,
-        }
-    );
-
-    // cookie options
-    const cookieOptions = {
-        expires: new Date(
-            Date.now() +
-                Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000
-        ),
-        httpOnly: true,
-    };
-
-    // ste token on cookie
-    res.cookie('jwt', token, cookieOptions);
-
-    //@ts-ignore
-    user.password = undefined;
-    // remove password from the output
-
     // send response
-    sendResponse(201, 'User created successfully', res, {
-        data: { ...user, token },
-        name: 'user',
-    });
+    new CustomResponse(res, 201, 'User created successfully').sendData(
+        'user',
+        user
+    );
 });
 
 // login a user
@@ -97,11 +68,10 @@ export const login = catchAsync(async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     // check if email and password exists
-    if (!email || !password) {
+    if (!email || !password)
         throw new AppError('Please provide email and password', 400);
-    }
 
-    // check if user exists
+    // find the user
     const user = await prisma.user.findUnique({
         where: {
             email,
@@ -117,48 +87,15 @@ export const login = catchAsync(async (req: Request, res: Response) => {
         },
     });
 
-    if (!user) {
-        throw new AppError('Invalid credentials', 401);
-    }
+    // check if user exists
+    if (!user) throw new AppError('Invalid credentials', 401);
 
-    // check if password is correct
+    // compare the password
     const isCorrect = await bcrypt.compare(password, user.password);
-
-    if (!isCorrect) {
-        throw new AppError('Invalid credentials', 401);
-    }
-
-    // create token for the user
-    const token = jwt.sign(
-        //@ts-ignore
-        { id: user.id },
-        process.env.JWT_SECRET as string,
-        {
-            expiresIn: process.env.JWT_EXPIRES_IN,
-        }
-    );
-
-    // cookie options
-    const cookieOptions = {
-        expires: new Date(
-            Date.now() +
-                Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000
-        ),
-        httpOnly: true,
-    };
-
-    // ste token on cookie
-    res.cookie('jwt', token, cookieOptions);
-
-    //@ts-ignore
-    user.password = undefined;
-    // remove password from the output
+    if (!isCorrect) throw new AppError('Invalid credentials', 401);
 
     // send response
-    sendResponse(200, 'User logged in successfully', res, {
-        data: { ...user, token },
-        name: 'user',
-    });
+    new CustomResponse(res, 200, 'Login successful').sendData('user', user);
 });
 
 // logout a user
@@ -168,7 +105,7 @@ export const logout = catchAsync(async (req: Request, res: Response) => {
         httpOnly: true,
     });
 
-    sendResponse(200, 'User logged out successfully', res);
+    new CustomResponse(res, 200, 'Logout successful').send();
 });
 
 // forget password
@@ -177,9 +114,7 @@ export const forgetPassword = catchAsync(
         const { email } = req.body;
 
         // check if email exists
-        if (!email) {
-            throw new AppError('Please provide email', 400);
-        }
+        if (!email) throw new AppError('Please provide email', 400);
 
         // check if user exists
         const user = await prisma.user.findUnique({
@@ -188,9 +123,7 @@ export const forgetPassword = catchAsync(
             },
         });
 
-        if (!user) {
-            throw new AppError('User not found', 404);
-        }
+        if (!user) throw new AppError('User not found', 404);
 
         // create a reset token
         let resetToken = crypto.randomBytes(32).toString('hex');
@@ -228,7 +161,7 @@ export const forgetPassword = catchAsync(
                 },
             });
 
-            sendResponse(200, 'Token sent to email', res);
+            return new CustomResponse(res, 200, 'Token sent to email').send();
         } catch (err) {
             // find the user and delete the reset token
             await prisma.user.update({
@@ -254,9 +187,8 @@ export const resetPassword = catchAsync(async (req: Request, res: Response) => {
     const { password, passwordConfirm } = req.body;
 
     // check if password and passwordConfirm exists
-    if (!password || !passwordConfirm) {
+    if (!password || !passwordConfirm)
         throw new AppError('Please provide password and passwordConfirm', 400);
-    }
 
     // find the user
     const user = await prisma.user.findFirst({
@@ -268,12 +200,10 @@ export const resetPassword = catchAsync(async (req: Request, res: Response) => {
         },
     });
 
-    if (!user) {
-        throw new AppError('Token is invalid or has expired', 400);
-    }
+    if (!user) throw new AppError('Token is invalid or has expired', 400);
 
     // update the password
-    const updatedUser = await prisma.user.update({
+    await prisma.user.update({
         where: {
             id: user.id,
         },
@@ -284,36 +214,7 @@ export const resetPassword = catchAsync(async (req: Request, res: Response) => {
         },
     });
 
-    // create token for the user
-    const token = jwt.sign(
-        { id: updatedUser.id },
-        process.env.JWT_SECRET as string,
-        {
-            expiresIn: process.env.JWT_EXPIRES_IN,
-        }
-    );
-
-    // cookie options
-    const cookieOptions = {
-        expires: new Date(
-            Date.now() +
-                Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000
-        ),
-        httpOnly: true,
-    };
-
-    // ste token on cookie
-    res.cookie('jwt', token, cookieOptions);
-
-    //@ts-ignore
-    updatedUser.password = undefined;
-    // remove password from the output
-
-    // send response
-    sendResponse(200, 'Password updated successfully', res, {
-        data: { ...updatedUser, token },
-        name: 'user',
-    });
+    new CustomResponse(res, 200, 'Password updated successfully').send();
 });
 
 // update password
@@ -322,12 +223,11 @@ export const updatePassword = catchAsync(
         const { currentPassword, password, passwordConfirm } = req.body;
 
         // check if currentPassword, password and passwordConfirm exists
-        if (!currentPassword || !password || !passwordConfirm) {
+        if (!currentPassword || !password || !passwordConfirm)
             throw new AppError(
                 'Please provide currentPassword, password and passwordConfirm',
                 400
             );
-        }
 
         // find the user
         const user = await prisma.user.findUnique({
@@ -336,16 +236,11 @@ export const updatePassword = catchAsync(
             },
         });
 
-        if (!user) {
-            throw new AppError('User not found', 404);
-        }
+        if (!user) throw new AppError('User not found', 404);
 
         // check if current password is correct
-        const isCorrect = await bcrypt.compare(currentPassword, user.password);
-
-        if (!isCorrect) {
+        if (!Password.compare(user.password, currentPassword))
             throw new AppError('Current password is incorrect', 401);
-        }
 
         // update the password
         const updatedUser = await prisma.user.update({
@@ -357,15 +252,10 @@ export const updatePassword = catchAsync(
             },
         });
 
-        //@ts-ignore
-        updatedUser.password = undefined;
-        // remove password from the output
-
-        // send response
-        sendResponse(200, 'Password updated successfully', res, {
-            data: updatedUser,
-            name: 'user',
-        });
+        new CustomResponse(res, 200, 'Password updated successfully').sendData(
+            'user',
+            updatedUser
+        );
     }
 );
 
@@ -375,9 +265,7 @@ export const sendVerificationEmail = catchAsync(
         const { email } = req.body;
 
         // check if email exists
-        if (!email) {
-            throw new AppError('Please provide email', 400);
-        }
+        if (!email) throw new AppError('Please provide email', 400);
 
         // find the user
         const user = await prisma.user.findUnique({
@@ -386,9 +274,7 @@ export const sendVerificationEmail = catchAsync(
             },
         });
 
-        if (!user) {
-            throw new AppError('User not found', 404);
-        }
+        if (!user) throw new AppError('User not found', 404);
 
         // create a verification token
         let emailVerificationToken = crypto.randomBytes(32).toString('hex');
@@ -428,7 +314,11 @@ export const sendVerificationEmail = catchAsync(
                 },
             });
 
-            sendResponse(200, 'Email sent', res);
+            return new CustomResponse(
+                res,
+                200,
+                'Verification email sent'
+            ).send();
         } catch (err) {
             // find the user and delete the verification token
             await prisma.user.update({
@@ -463,12 +353,10 @@ export const verifyEmail = catchAsync(async (req: Request, res: Response) => {
         },
     });
 
-    if (!user) {
-        throw new AppError('Token is invalid or has expired', 400);
-    }
+    if (!user) throw new AppError('Token is invalid or has expired', 400);
 
     // update the user
-    const updatedUser = await prisma.user.update({
+    await prisma.user.update({
         where: {
             id: user.id,
         },
@@ -479,15 +367,7 @@ export const verifyEmail = catchAsync(async (req: Request, res: Response) => {
         },
     });
 
-    //@ts-ignore
-    updatedUser.password = undefined;
-    // remove password from the output
-
-    // send response
-    sendResponse(200, 'Email verified successfully', res, {
-        data: updatedUser,
-        name: 'user',
-    });
+    new CustomResponse(res, 200, 'Email verified successfully').send();
 });
 
 // google One Tap Login
@@ -496,9 +376,7 @@ export const googleOneTapLogin = catchAsync(
         const { idToken } = req.body;
 
         // check if idToken exists
-        if (!idToken) {
-            throw new AppError('Please provide idToken', 400);
-        }
+        if (!idToken) throw new AppError('Please provide idToken', 400);
 
         // verify the idToken
         const ticket = await client.verifyIdToken({
@@ -508,9 +386,7 @@ export const googleOneTapLogin = catchAsync(
 
         const payload = ticket.getPayload();
 
-        if (!payload) {
-            throw new AppError('Google One Tap Login failed', 401);
-        }
+        if (!payload) throw new AppError('Google One Tap Login failed', 401);
 
         const email = payload.email as string;
         const avatar = payload.picture as string;
@@ -525,45 +401,30 @@ export const googleOneTapLogin = catchAsync(
         });
 
         // if user exists, send token
-        if (user) {
-            // create token
-            const token = Token.sign({ id: user.id });
+        if (user)
+            return new CustomResponse(res, 200, 'Login successful').sendData(
+                'user',
+                user
+            );
 
-            // send cookie
-            res.cookie('jwt', token, cookieOptions);
+        // create a new user
+        const newUser = await prisma.user.create({
+            data: {
+                email,
+                avatar,
+                firstName,
+                lastName,
+                emailVerified: true,
+                password: await bcrypt.hash(
+                    crypto.randomBytes(32).toString('hex'),
+                    12
+                ),
+            },
+        });
 
-            // send response
-            sendResponse(200, 'Logged in successfully', res, {
-                data: user,
-                name: 'user',
-            });
-        } else {
-            // create a new user
-            const newUser = await prisma.user.create({
-                data: {
-                    email,
-                    avatar,
-                    firstName,
-                    lastName,
-                    emailVerified: true,
-                    password: await bcrypt.hash(
-                        crypto.randomBytes(32).toString('hex'),
-                        12
-                    ),
-                },
-            });
-
-            // create token for the user
-            const token = Token.sign({ id: newUser.id });
-
-            // ste token on cookie
-            res.cookie('jwt', token, cookieOptions);
-
-            // send response
-            sendResponse(200, 'Login successful', res, {
-                data: newUser,
-                name: 'user',
-            });
-        }
+        new CustomResponse(res, 200, 'Login successful').sendData(
+            'user',
+            newUser
+        );
     }
 );

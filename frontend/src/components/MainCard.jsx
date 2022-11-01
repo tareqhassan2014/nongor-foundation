@@ -2,8 +2,14 @@ import PropTypes from 'prop-types';
 import { forwardRef } from 'react';
 
 // material-ui
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    Divider,
+    Typography,
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { Card, CardContent, CardHeader, Divider, Typography } from '@mui/material';
 
 // project import
 import Highlighter from './third-party/Highlighter';
@@ -11,10 +17,25 @@ import Highlighter from './third-party/Highlighter';
 // header style
 const headerSX = {
     p: 2.5,
-    '& .MuiCardHeader-action': { m: '0px auto', alignSelf: 'center' }
+    '& .MuiCardHeader-action': { m: '0px auto', alignSelf: 'center' },
 };
 
-// ==============================|| CUSTOM - MAIN CARD ||============================== //
+interface Props {
+    sx: any;
+    others: any;
+    title: string;
+    contentSX: any;
+    shadow: string;
+    border: boolean;
+    content: boolean;
+    divider: boolean;
+    elevation: number;
+    darkTitle: boolean;
+    boxShadow: boolean;
+    children: JSX.Element;
+    secondary: JSX.Element;
+    codeHighlight: string;
+}
 
 const MainCard = forwardRef(
     (
@@ -33,11 +54,12 @@ const MainCard = forwardRef(
             title,
             codeHighlight,
             ...others
-        },
+        }: Props,
         ref
     ) => {
         const theme = useTheme();
-        boxShadow = theme.palette.mode === 'dark' ? boxShadow || true : boxShadow;
+        boxShadow =
+            theme.palette.mode === 'dark' ? boxShadow || true : boxShadow;
 
         return (
             <Card
@@ -48,32 +70,51 @@ const MainCard = forwardRef(
                     ...sx,
                     border: border ? '1px solid' : 'none',
                     borderRadius: 2,
-                    borderColor: theme.palette.mode === 'dark' ? theme.palette.divider : theme.palette.grey.A800,
-                    boxShadow: boxShadow && (!border || theme.palette.mode === 'dark') ? shadow || theme.customShadows.z1 : 'inherit',
+                    borderColor:
+                        theme.palette.mode === 'dark'
+                            ? theme.palette.divider
+                            : theme.palette.grey.A800,
+                    boxShadow:
+                        boxShadow && (!border || theme.palette.mode === 'dark')
+                            ? shadow || theme.customShadows.z1
+                            : 'inherit',
                     ':hover': {
-                        boxShadow: boxShadow ? shadow || theme.customShadows.z1 : 'inherit'
+                        boxShadow: boxShadow
+                            ? shadow || theme.customShadows.z1
+                            : 'inherit',
                     },
                     '& pre': {
                         m: 0,
                         p: '16px !important',
                         fontFamily: theme.typography.fontFamily,
-                        fontSize: '0.75rem'
-                    }
+                        fontSize: '0.75rem',
+                    },
                 }}
             >
                 {/* card header and action */}
                 {!darkTitle && title && (
-                    <CardHeader sx={headerSX} titleTypographyProps={{ variant: 'subtitle1' }} title={title} action={secondary} />
+                    <CardHeader
+                        sx={headerSX}
+                        titleTypographyProps={{ variant: 'subtitle1' }}
+                        title={title}
+                        action={secondary}
+                    />
                 )}
                 {darkTitle && title && (
-                    <CardHeader sx={headerSX} title={<Typography variant="h3">{title}</Typography>} action={secondary} />
+                    <CardHeader
+                        sx={headerSX}
+                        title={<Typography variant="h3">{title}</Typography>}
+                        action={secondary}
+                    />
                 )}
 
                 {/* content & header divider */}
                 {title && divider && <Divider />}
 
                 {/* card content */}
-                {content && <CardContent sx={contentSX}>{children}</CardContent>}
+                {content && (
+                    <CardContent sx={contentSX}>{children}</CardContent>
+                )}
                 {!content && children}
 
                 {/* card footer - clipboard & highlighter  */}
@@ -103,7 +144,7 @@ MainCard.propTypes = {
     title: PropTypes.string,
     codeHighlight: PropTypes.bool,
     content: PropTypes.bool,
-    children: PropTypes.node
+    children: PropTypes.node,
 };
 
 export default MainCard;

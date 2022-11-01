@@ -8,6 +8,7 @@ import authSlice from '../features/auth/authSlice';
 import messageSlice from '../features/message/messageSlice';
 import baseAPI from './baseAPI';
 
+import menuSlice from 'features/menu/menuSlice';
 import {
     FLUSH,
     PAUSE,
@@ -24,9 +25,10 @@ import contactSlice from '../features/contact/contactSlice';
 import degreeSlice from '../features/degree/degreeSlice';
 
 const rootReducer = combineReducers({
-    message: messageSlice,
+    menu: menuSlice,
     auth: authSlice,
     degree: degreeSlice,
+    message: messageSlice,
     address: addressSlice,
     contact: contactSlice,
     [baseAPI.reducerPath]: baseAPI.reducer,
@@ -36,7 +38,7 @@ const persistConfig = {
     key: 'nongor-foundation',
     version: 1,
     storage,
-    whitelist: ['user', 'address', 'auth', 'degree', 'contact'],
+    whitelist: ['user', 'address', 'auth', 'degree', 'contact', 'menu'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -56,15 +58,11 @@ export const store = configureStore({
                 ],
             },
         }).concat(baseAPI.middleware),
+
+    devTools: process.env.NODE_ENV !== 'production',
 });
 
 export const persistor = persistStore(store);
-
-// export const store = configureStore({
-//     reducer: rootReducer,
-//     middleware: (getDefaultMiddleware) =>
-//         getDefaultMiddleware().concat(baseAPI.middleware),
-// });
 
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;

@@ -7,7 +7,7 @@ process.on('uncaughtException', (err) => {
     process.exit(1);
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || process.env.port || 3000;
 
 const app = new App(port as number);
 

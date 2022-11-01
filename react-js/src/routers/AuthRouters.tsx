@@ -19,7 +19,7 @@ const AuthRouters = {
             element: <AuthLogin />,
         },
         {
-            path: 'signup',
+            path: 'register',
             element: <AuthRegister />,
         },
     ],

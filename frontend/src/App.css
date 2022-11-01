@@ -1,0 +1,7 @@
+.is-sticky {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    box-shadow: 0 0 20px 3px rgba(0, 0, 0, 0.05) !important;
+    animation: 500ms ease 0s 1 fadeInDown;
+}
